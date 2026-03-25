@@ -1,0 +1,47 @@
+{
+  "name": "ui-audit-mcp",
+  "version": "0.1.0",
+  "description": "AI-powered UI review MCP server for Claude Code. Captures screenshots, runs accessibility audits, analyzes frontend code, and provides expert review methodology — all in one tool.",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "ui-audit-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "ui-review",
+    "accessibility",
+    "frontend",
+    "design-review",
+    "web-audit",
+    "axe-core",
+    "puppeteer",
+    "claude-code"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.28.0",
+    "axe-core": "^4.10.0",
+    "glob": "^11.0.0",
+    "puppeteer-core": "^24.0.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}
