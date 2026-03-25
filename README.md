@@ -41,8 +41,8 @@ Claude will automatically:
 ### Install as MCP Server (for Claude Code)
 
 ```bash
-# Add to Claude Code
-claude mcp add ui-audit -- npx -y ui-audit-mcp
+# Add to Claude Code (with your Anthropic API key for the AI review step)
+claude mcp add ui-audit -e ANTHROPIC_API_KEY="sk-ant-..." -- npx -y ui-audit-mcp
 ```
 
 That's it. Now in any Claude Code conversation:
@@ -50,9 +50,15 @@ That's it. Now in any Claude Code conversation:
 ```
 You: Review the UI at http://localhost:3000, source code is in ./src
 
-Claude: *captures screenshot, runs audits, analyzes code*
-       *generates detailed expert review*
-       *implements fixes automatically*
+Claude Code calls review_ui →
+  1. 📸 Captures screenshot of your running app
+  2. ♿ Runs axe-core accessibility audit
+  3. ⚡ Measures Core Web Vitals
+  4. 🔍 Scans source code for anti-patterns
+  5. 🧠 Sends everything to Claude API (a separate "expert" instance)
+  6. 📋 Expert generates detailed report with exact fixes
+  7. ← Report returns to Claude Code
+  8. 🔧 Claude Code implements every fix from the report
 ```
 
 ### Install Globally
@@ -63,15 +69,30 @@ npm install -g ui-audit-mcp
 
 ## Tools
 
-The MCP server exposes 6 tools that Claude uses automatically:
+The MCP server exposes 8 tools that Claude uses automatically:
 
-### `full_review` ⭐ Primary Tool
-Runs **everything** — screenshot + accessibility + performance + code analysis. This is the tool Claude will call when you ask for a UI review.
+### `review_ui` ⭐ THE Primary Tool — Full Automated Pipeline
+This is the magic. One tool that does **everything**:
+1. Captures screenshot of your running app
+2. Runs accessibility audit (axe-core)
+3. Measures Core Web Vitals
+4. Analyzes your source code
+5. **Sends all data to Claude API** (a separate expert instance) to generate a comprehensive review
+6. Returns the expert report to Claude Code for implementation
 
 ```
 Input: URL + code directory
-Output: Screenshot (visible to Claude) + comprehensive audit data
+Output: Screenshot + expert report with exact fixes
+→ Claude Code then implements every fix automatically
 ```
+
+> **This is the "Claude co" automation.** A dedicated Claude instance reviews your UI as a frontend expert, generates a detailed report, and hands it to Claude Code to execute.
+
+### `quick_review`
+Fast design-only review. Captures a screenshot and sends it to Claude for visual/UX feedback. No code analysis, no performance audit. Good for rapid iteration.
+
+### `full_review`
+Runs all data collection (screenshot + accessibility + performance + code analysis) and returns raw results. Use this if you want Claude Code to do the analysis itself instead of calling a separate Claude instance.
 
 ### `screenshot`
 Captures a high-resolution PNG screenshot of any URL. Claude can see the image directly and analyze visual design, layout, spacing, typography, and color usage.
@@ -230,32 +251,43 @@ Auto-detected from `package.json`:
 ## Requirements
 
 - **Node.js** >= 18.0.0
-- **Chrome/Chromium** (Puppeteer downloads its own copy)
+- **Chrome/Chromium** (uses your system Chrome — no extra download)
 - **Claude Code** (for MCP integration)
+- **Anthropic API Key** (for the `review_ui` and `quick_review` tools that call Claude API)
 
 ## How It Works
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                   Claude Code                        │
-│                                                      │
-│  User: "Review my UI"                                │
-│           │                                          │
-│           ▼                                          │
-│  ┌─────────────────┐                                 │
-│  │  ui-audit MCP   │                                 │
-│  │                  │                                 │
-│  │  📸 Screenshot ──┼──► Puppeteer ──► PNG Image     │
-│  │  ♿ Accessibility┼──► axe-core ──► Violations     │
-│  │  ⚡ Performance ─┼──► Perf API ──► Web Vitals    │
-│  │  🔍 Code Analysis┼──► File Scan ─► Findings      │
-│  └────────┬─────────┘                                │
-│           │                                          │
-│           ▼                                          │
-│  Claude sees screenshot + all data                   │
-│  Claude applies expert review methodology            │
-│  Claude generates findings + implements fixes        │
-└─────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                        Claude Code                               │
+│                                                                  │
+│  User: "Review my UI at localhost:3000 and fix everything"       │
+│           │                                                      │
+│           ▼                                                      │
+│  ┌──────────────────────────────────────────────────────────┐    │
+│  │                    ui-audit MCP                           │    │
+│  │                                                          │    │
+│  │  Step 1: Collect Data                                    │    │
+│  │  📸 Screenshot ───► Puppeteer ───► PNG Image             │    │
+│  │  ♿ Accessibility ► axe-core ────► WCAG Violations       │    │
+│  │  ⚡ Performance ──► Perf API ───► Web Vitals            │    │
+│  │  🔍 Code Scan ────► File Analysis ► Anti-patterns       │    │
+│  │           │                                              │    │
+│  │           ▼                                              │    │
+│  │  Step 2: Expert Review (Claude API call)                 │    │
+│  │  🧠 Send screenshot + all data ──► Claude API           │    │
+│  │     "Act as a world-class          (separate instance)   │    │
+│  │      frontend expert..."            │                    │    │
+│  │                                     ▼                    │    │
+│  │                              Expert Report               │    │
+│  │                              with exact fixes            │    │
+│  └──────────────────────┬───────────────────────────────────┘    │
+│                         │                                        │
+│                         ▼                                        │
+│  Step 3: Claude Code receives the expert report                  │
+│  Step 4: Claude Code implements every fix automatically          │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ## Development
