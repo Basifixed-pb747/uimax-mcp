@@ -1,11 +1,11 @@
 {
-  "name": "ui-audit-mcp",
+  "name": "uimax-mcp",
   "version": "0.1.0",
   "description": "AI-powered UI review MCP server for Claude Code. Captures screenshots, runs accessibility audits, analyzes frontend code, and provides expert review methodology — all in one tool.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "ui-audit-mcp": "dist/index.js"
+    "uimax-mcp": "dist/index.js"
   },
   "files": [
     "dist/**/*"

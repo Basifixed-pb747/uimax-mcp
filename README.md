@@ -1,10 +1,10 @@
-# ui-audit-mcp
+# UIMax MCP
 
 **Turns Claude Code into a frontend expert that reviews and fixes your UI automatically.**
 
 <p align="center">
-  <img src="https://img.shields.io/npm/v/ui-audit-mcp" alt="npm version" />
-  <img src="https://img.shields.io/npm/l/ui-audit-mcp" alt="license" />
+  <img src="https://img.shields.io/npm/v/uimax-mcp" alt="npm version" />
+  <img src="https://img.shields.io/npm/l/uimax-mcp" alt="license" />
   <img src="https://img.shields.io/badge/MCP-compatible-blueviolet" alt="MCP compatible" />
   <img src="https://img.shields.io/badge/cost-free%20(Pro%20plan)-brightgreen" alt="free for Pro plan" />
 </p>
@@ -21,7 +21,7 @@ One command — *"review my UI at localhost:3000"* — and it:
 **Free for all Claude Code users (Pro plan and above). No API keys. No extra costs. Just install and go.**
 
 ```bash
-claude mcp add ui-audit -- npx -y ui-audit-mcp
+claude mcp add uimax -- npx -y uimax-mcp
 ```
 
 ---
@@ -44,7 +44,7 @@ You're building a frontend. You want expert-level feedback on your UI — visual
 
 ```bash
 # Add to Claude Code — that's it, no API keys needed
-claude mcp add ui-audit -- npx -y ui-audit-mcp
+claude mcp add uimax -- npx -y uimax-mcp
 ```
 
 That's it. Now in any Claude Code conversation:
@@ -65,7 +65,7 @@ Claude Code calls review_ui →
 ### Install Globally
 
 ```bash
-npm install -g ui-audit-mcp
+npm install -g uimax-mcp
 ```
 
 ## Tools
@@ -139,10 +139,10 @@ The server also provides expert review prompts that guide Claude's analysis:
 You: Review the UI at http://localhost:3000
      Source code is in /Users/me/project/src
 
-Claude: [Calls full_review tool]
-        [Sees screenshot, reads audit data]
+Claude: [Calls review_ui tool]
+        [Sees screenshot, reads audit data, follows expert methodology]
         [Generates comprehensive review with 20+ findings]
-        [Starts implementing fixes]
+        [Implements every fix automatically]
 ```
 
 ### Responsive Check
@@ -159,8 +159,8 @@ Claude: [Calls responsive_screenshots tool]
 You: Take a screenshot of localhost:3000 and tell me
      what a senior designer would change
 
-Claude: [Calls screenshot tool]
-        [Provides focused design feedback]
+Claude: [Calls quick_review tool]
+        [Provides focused design feedback + implements fixes]
 ```
 
 ### Accessibility Only
@@ -263,7 +263,7 @@ Auto-detected from `package.json`:
 │           │                                                      │
 │           ▼                                                      │
 │  ┌──────────────────────────────────────────────────────────┐    │
-│  │              ui-audit MCP (data collection)              │    │
+│  │              UIMax MCP (data collection)                  │    │
 │  │                                                          │    │
 │  │  📸 Screenshot ───► Puppeteer ───► PNG Image             │    │
 │  │  ♿ Accessibility ► axe-core ────► WCAG Violations       │    │
@@ -289,8 +289,8 @@ Auto-detected from `package.json`:
 
 ```bash
 # Clone
-git clone https://github.com/prembobby39-gif/ui-audit-mcp.git
-cd ui-audit-mcp
+git clone https://github.com/prembobby39-gif/uimax-mcp.git
+cd uimax-mcp
 
 # Install
 npm install
@@ -299,7 +299,7 @@ npm install
 npm run build
 
 # Test locally with Claude Code
-claude mcp add ui-audit-dev -- node /path/to/ui-audit-mcp/dist/index.js
+claude mcp add uimax-dev -- node /path/to/uimax-mcp/dist/index.js
 ```
 
 ## Contributing

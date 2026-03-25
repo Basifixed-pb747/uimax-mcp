@@ -56,7 +56,7 @@ export async function runFullReview(
  */
 export function formatFullReviewReport(result: FullReviewResult): string {
   const sections = [
-    `# UI Audit Report`,
+    `# UIMax Review Report`,
     ``,
     `**URL:** ${result.url}`,
     `**Code Directory:** ${result.codeDirectory}`,

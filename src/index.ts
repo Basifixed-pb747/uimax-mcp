@@ -10,6 +10,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-  console.error("Fatal error starting ui-audit MCP server:", error);
+  console.error("Fatal error starting UIMax MCP server:", error);
   process.exit(1);
 });

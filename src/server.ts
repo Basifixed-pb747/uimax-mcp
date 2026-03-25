@@ -17,7 +17,7 @@ import {
 
 export function createServer(): McpServer {
   const server = new McpServer({
-    name: "ui-audit",
+    name: "uimax",
     version: "0.2.0",
   });
 
@@ -57,7 +57,7 @@ This tool is FREE — it runs entirely within Claude Code using the user's exist
             {
               type: "text" as const,
               text: [
-                `# UI Audit Data Collection Complete`,
+                `# UIMax Data Collection Complete`,
                 ``,
                 `**URL:** ${url}`,
                 `**Code Directory:** ${codeDirectory}`,
