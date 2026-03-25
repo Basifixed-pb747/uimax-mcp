@@ -34,7 +34,6 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.52.0",
     "@modelcontextprotocol/sdk": "^1.28.0",
     "axe-core": "^4.10.0",
     "glob": "^11.0.0",

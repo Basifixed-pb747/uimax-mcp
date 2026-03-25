@@ -6,7 +6,6 @@ import { runAccessibilityAudit, formatAccessibilityReport } from "./tools/access
 import { measurePerformance, formatPerformanceReport } from "./tools/performance.js";
 import { analyzeCode, formatCodeAnalysisReport } from "./tools/code-analysis.js";
 import { runFullReview, formatFullReviewReport } from "./tools/full-review.js";
-import { generateExpertReport, generateQuickDesignReport } from "./tools/report-generator.js";
 import { closeBrowser } from "./utils/browser.js";
 import {
   UI_REVIEW_PROMPT,
@@ -19,10 +18,169 @@ import {
 export function createServer(): McpServer {
   const server = new McpServer({
     name: "ui-audit",
-    version: "0.1.0",
+    version: "0.2.0",
   });
 
-  // ── Tools ──────────────────────────────────────────────────────
+  // ── Primary Tools (automated pipeline) ────────────────────────
+
+  server.tool(
+    "review_ui",
+    `THE PRIMARY TOOL — Fully automated UI review pipeline. Captures a screenshot, runs accessibility/performance/code audits, then returns ALL data along with an expert frontend review methodology so you can generate a comprehensive review and implement fixes.
+
+Use this when the user asks to "review my UI", "audit my frontend", or "find UI issues". After receiving the results, you MUST:
+1. Study the screenshot carefully for visual/UX issues
+2. Analyze the audit data following the expert methodology provided
+3. Generate a comprehensive review with SPECIFIC fixes (exact CSS values, code changes)
+4. Implement the fixes directly in the codebase
+
+This tool is FREE — it runs entirely within Claude Code using the user's existing plan. No API keys needed.`,
+    {
+      url: z.string().url().describe("URL of the running application (e.g., http://localhost:3000)"),
+      codeDirectory: z.string().describe("Absolute path to the frontend source directory (e.g., /Users/me/project/src)"),
+      width: z.number().optional().default(1440).describe("Viewport width in pixels"),
+      height: z.number().optional().default(900).describe("Viewport height in pixels"),
+    },
+    async ({ url, codeDirectory, width, height }) => {
+      try {
+        // Collect all audit data
+        const auditData = await runFullReview(url, codeDirectory, {
+          width: width ?? 1440,
+          height: height ?? 900,
+        });
+
+        const auditReport = formatFullReviewReport(auditData);
+
+        // Return screenshot + data + expert prompt to Claude Code
+        // Claude Code (on the user's Pro plan) generates the expert review itself
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: [
+                `# UI Audit Data Collection Complete`,
+                ``,
+                `**URL:** ${url}`,
+                `**Code Directory:** ${codeDirectory}`,
+                `**Timestamp:** ${auditData.timestamp}`,
+                `**Accessibility violations:** ${auditData.accessibility.violations.length}`,
+                `**Accessibility passes:** ${auditData.accessibility.passes}`,
+                `**Load time:** ${auditData.performance.loadTime.toFixed(0)}ms`,
+                `**DOM nodes:** ${auditData.performance.domNodes}`,
+                `**Code files analyzed:** ${auditData.codeAnalysis.totalFiles}`,
+                `**Code findings:** ${auditData.codeAnalysis.findings.length}`,
+                `**Framework detected:** ${auditData.codeAnalysis.framework}`,
+                ``,
+                `---`,
+                ``,
+                `## Screenshot of the live UI — study this carefully:`,
+              ].join("\n"),
+            },
+            {
+              type: "image" as const,
+              data: auditData.screenshot.base64,
+              mimeType: auditData.screenshot.mimeType,
+            },
+            {
+              type: "text" as const,
+              text: [
+                ``,
+                `---`,
+                ``,
+                auditReport,
+                ``,
+                `---`,
+                ``,
+                `# Expert Review Instructions`,
+                ``,
+                `You now have everything you need. Follow the methodology below to generate a comprehensive expert UI review, then implement every fix.`,
+                ``,
+                UI_REVIEW_PROMPT,
+                ``,
+                `---`,
+                ``,
+                `# Implementation Instructions`,
+                ``,
+                `After generating your review, IMMEDIATELY implement the fixes:`,
+                `1. Start with CRITICAL severity findings`,
+                `2. Then HIGH, MEDIUM, LOW in order`,
+                `3. For each finding, locate the exact file and apply the specific code change`,
+                `4. After implementing all fixes, provide a summary of what was changed`,
+                ``,
+                `DO NOT just list the findings — actually edit the code files and fix them.`,
+              ].join("\n"),
+            },
+          ],
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return {
+          content: [{ type: "text" as const, text: `UI review failed: ${message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  server.tool(
+    "quick_review",
+    `Quick design-only review. Captures a screenshot and returns it with a focused design review methodology. No code analysis, no performance audit — just visual/UX feedback. Great for rapid design iteration.
+
+After receiving the screenshot, analyze it as a senior UI designer and provide 5-10 high-impact observations with specific fixes.
+
+This tool is FREE — runs entirely within Claude Code.`,
+    {
+      url: z.string().url().describe("URL of the page to review"),
+    },
+    async ({ url }) => {
+      try {
+        const screenshot = await captureScreenshot({
+          url,
+          width: 1440,
+          height: 900,
+          fullPage: true,
+          delay: 1000,
+          deviceScaleFactor: 2,
+        });
+
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `# Quick Design Review\n\n**URL:** ${url}\n**Captured:** ${screenshot.timestamp}\n\nScreenshot:`,
+            },
+            {
+              type: "image" as const,
+              data: screenshot.base64,
+              mimeType: screenshot.mimeType,
+            },
+            {
+              type: "text" as const,
+              text: [
+                ``,
+                `---`,
+                ``,
+                `# Review Methodology`,
+                ``,
+                QUICK_DESIGN_PROMPT,
+                ``,
+                `---`,
+                ``,
+                `After generating your design review, implement the fixes directly in the code.`,
+              ].join("\n"),
+            },
+          ],
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return {
+          content: [{ type: "text" as const, text: `Quick review failed: ${message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── Individual Data Collection Tools ──────────────────────────
 
   server.tool(
     "screenshot",
@@ -90,6 +248,18 @@ export function createServer(): McpServer {
             mimeType: result.mimeType,
           },
         ]);
+
+        content.push({
+          type: "text" as const,
+          text: [
+            ``,
+            `---`,
+            ``,
+            `# Responsive Review Methodology`,
+            ``,
+            RESPONSIVE_REVIEW_PROMPT,
+          ].join("\n"),
+        });
 
         return { content };
       } catch (error) {
@@ -192,203 +362,11 @@ export function createServer(): McpServer {
     }
   );
 
-  server.tool(
-    "full_review",
-    "Run a COMPLETE UI audit: captures screenshot, runs accessibility audit (axe-core), measures performance (Web Vitals), and analyzes source code. Returns everything needed for a comprehensive expert review. This is the primary tool — use this for thorough UI reviews.",
-    {
-      url: z.string().url().describe("URL of the running application (e.g., http://localhost:3000)"),
-      codeDirectory: z.string().describe("Absolute path to the frontend source directory"),
-      width: z.number().optional().default(1440).describe("Viewport width"),
-      height: z.number().optional().default(900).describe("Viewport height"),
-    },
-    async ({ url, codeDirectory, width, height }) => {
-      try {
-        const result = await runFullReview(url, codeDirectory, {
-          width: width ?? 1440,
-          height: height ?? 900,
-        });
-        const report = formatFullReviewReport(result);
-
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: `Screenshot of ${url}:`,
-            },
-            {
-              type: "image" as const,
-              data: result.screenshot.base64,
-              mimeType: result.screenshot.mimeType,
-            },
-            {
-              type: "text" as const,
-              text: report,
-            },
-          ],
-        };
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        return {
-          content: [{ type: "text" as const, text: `Full review failed: ${message}` }],
-          isError: true,
-        };
-      }
-    }
-  );
-
-  // ── AI-Powered Review Tools (call Claude API) ──────────────────
-
-  server.tool(
-    "review_ui",
-    `THE PRIMARY TOOL — Fully automated UI review pipeline. This tool:
-1. Captures a screenshot of the running app
-2. Runs accessibility audit (axe-core WCAG 2.1)
-3. Measures performance (Core Web Vitals)
-4. Analyzes source code for anti-patterns
-5. Sends EVERYTHING to a separate Claude instance acting as a world-class frontend expert
-6. Returns a comprehensive expert report with specific, actionable fixes
-
-Use this tool when the user asks to "review my UI" or "audit my frontend". The report will contain exact CSS values, code changes, and design specs that you can implement directly.
-
-REQUIRES: ANTHROPIC_API_KEY environment variable.`,
-    {
-      url: z.string().url().describe("URL of the running application (e.g., http://localhost:3000)"),
-      codeDirectory: z.string().describe("Absolute path to the frontend source directory (e.g., /Users/me/project/src)"),
-      width: z.number().optional().default(1440).describe("Viewport width in pixels"),
-      height: z.number().optional().default(900).describe("Viewport height in pixels"),
-      model: z.string().optional().default("claude-sonnet-4-20250514").describe("Claude model to use for report generation"),
-    },
-    async ({ url, codeDirectory, width, height, model }) => {
-      try {
-        // Step 1-4: Collect all audit data
-        const auditData = await runFullReview(url, codeDirectory, {
-          width: width ?? 1440,
-          height: height ?? 900,
-        });
-
-        // Step 5: Send to Claude API for expert analysis
-        const reviewReport = await generateExpertReport(
-          auditData,
-          model ?? "claude-sonnet-4-20250514"
-        );
-
-        // Step 6: Return the report + screenshot to Claude Code
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: `Screenshot of ${url} (what the expert reviewed):`,
-            },
-            {
-              type: "image" as const,
-              data: auditData.screenshot.base64,
-              mimeType: auditData.screenshot.mimeType,
-            },
-            {
-              type: "text" as const,
-              text: [
-                `# Expert UI Review Report`,
-                ``,
-                `**Generated by:** ${reviewReport.model}`,
-                `**Tokens used:** ${reviewReport.tokensUsed.toLocaleString()}`,
-                `**Timestamp:** ${reviewReport.timestamp}`,
-                ``,
-                `---`,
-                ``,
-                reviewReport.report,
-                ``,
-                `---`,
-                ``,
-                `## Instructions for Implementation`,
-                ``,
-                `The above report was generated by a separate Claude instance acting as a frontend expert.`,
-                `Now implement ALL the fixes listed above, starting with CRITICAL severity and working down.`,
-                `For each fix:`,
-                `1. Locate the file mentioned in the finding`,
-                `2. Apply the exact code change suggested`,
-                `3. Verify the change doesn't break anything`,
-                `4. Move to the next finding`,
-              ].join("\n"),
-            },
-          ],
-        };
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        return {
-          content: [{ type: "text" as const, text: `UI review failed: ${message}` }],
-          isError: true,
-        };
-      }
-    }
-  );
-
-  server.tool(
-    "quick_review",
-    "Quick design-only review. Captures a screenshot and sends it to Claude for visual/UX feedback. Faster than full_review — no code analysis, no performance audit. Good for rapid design iteration.",
-    {
-      url: z.string().url().describe("URL of the page to review"),
-      model: z.string().optional().default("claude-sonnet-4-20250514").describe("Claude model to use"),
-    },
-    async ({ url, model }) => {
-      try {
-        // Capture screenshot
-        const screenshot = await captureScreenshot({
-          url,
-          width: 1440,
-          height: 900,
-          fullPage: true,
-          delay: 1000,
-          deviceScaleFactor: 2,
-        });
-
-        // Send to Claude for design review
-        const reviewReport = await generateQuickDesignReport(
-          screenshot.base64,
-          url,
-          model ?? "claude-sonnet-4-20250514"
-        );
-
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: `Screenshot of ${url}:`,
-            },
-            {
-              type: "image" as const,
-              data: screenshot.base64,
-              mimeType: screenshot.mimeType,
-            },
-            {
-              type: "text" as const,
-              text: [
-                `# Quick Design Review`,
-                ``,
-                `**Model:** ${reviewReport.model}`,
-                `**Tokens:** ${reviewReport.tokensUsed.toLocaleString()}`,
-                ``,
-                `---`,
-                ``,
-                reviewReport.report,
-              ].join("\n"),
-            },
-          ],
-        };
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        return {
-          content: [{ type: "text" as const, text: `Quick review failed: ${message}` }],
-          isError: true,
-        };
-      }
-    }
-  );
-
   // ── Prompts ────────────────────────────────────────────────────
 
   server.prompt(
     "ui-review",
-    "Comprehensive UI review methodology. Use this prompt after running the full_review tool to get expert-level analysis of the collected data.",
+    "Comprehensive UI review methodology. Use this prompt after running the review_ui tool to get expert-level analysis of the collected data.",
     () => ({
       messages: [
         {

@@ -41,8 +41,8 @@ Claude will automatically:
 ### Install as MCP Server (for Claude Code)
 
 ```bash
-# Add to Claude Code (with your Anthropic API key for the AI review step)
-claude mcp add ui-audit -e ANTHROPIC_API_KEY="sk-ant-..." -- npx -y ui-audit-mcp
+# Add to Claude Code — that's it, no API keys needed
+claude mcp add ui-audit -- npx -y ui-audit-mcp
 ```
 
 That's it. Now in any Claude Code conversation:
@@ -55,10 +55,9 @@ Claude Code calls review_ui →
   2. ♿ Runs axe-core accessibility audit
   3. ⚡ Measures Core Web Vitals
   4. 🔍 Scans source code for anti-patterns
-  5. 🧠 Sends everything to Claude API (a separate "expert" instance)
-  6. 📋 Expert generates detailed report with exact fixes
-  7. ← Report returns to Claude Code
-  8. 🔧 Claude Code implements every fix from the report
+  5. 🧠 Returns screenshot + all data + expert review methodology
+  6. 📋 Claude Code generates expert review (using YOUR Pro plan — $0 extra)
+  7. 🔧 Claude Code implements every fix automatically
 ```
 
 ### Install Globally
@@ -77,22 +76,19 @@ This is the magic. One tool that does **everything**:
 2. Runs accessibility audit (axe-core)
 3. Measures Core Web Vitals
 4. Analyzes your source code
-5. **Sends all data to Claude API** (a separate expert instance) to generate a comprehensive review
-6. Returns the expert report to Claude Code for implementation
+5. Returns ALL data + expert frontend review methodology to Claude Code
+6. Claude Code generates the expert review and implements fixes
 
 ```
 Input: URL + code directory
-Output: Screenshot + expert report with exact fixes
-→ Claude Code then implements every fix automatically
+Output: Screenshot + audit data + expert methodology
+→ Claude Code generates review + implements every fix
 ```
 
-> **This is the "Claude co" automation.** A dedicated Claude instance reviews your UI as a frontend expert, generates a detailed report, and hands it to Claude Code to execute.
+> **100% free for Pro plan users.** The MCP handles data collection. Claude Code (your existing subscription) handles the expert review and implementation. No API keys. No extra charges.
 
 ### `quick_review`
-Fast design-only review. Captures a screenshot and sends it to Claude for visual/UX feedback. No code analysis, no performance audit. Good for rapid iteration.
-
-### `full_review`
-Runs all data collection (screenshot + accessibility + performance + code analysis) and returns raw results. Use this if you want Claude Code to do the analysis itself instead of calling a separate Claude instance.
+Fast design-only review. Captures a screenshot and returns it with a focused design methodology. No code analysis, no performance audit. Good for rapid iteration.
 
 ### `screenshot`
 Captures a high-resolution PNG screenshot of any URL. Claude can see the image directly and analyze visual design, layout, spacing, typography, and color usage.
@@ -253,39 +249,36 @@ Auto-detected from `package.json`:
 - **Node.js** >= 18.0.0
 - **Chrome/Chromium** (uses your system Chrome — no extra download)
 - **Claude Code** (for MCP integration)
-- **Anthropic API Key** (for the `review_ui` and `quick_review` tools that call Claude API)
+- **No API keys needed** — runs entirely within Claude Code using your existing Pro plan
 
 ## How It Works
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                        Claude Code                               │
+│                  Claude Code (your Pro plan)                      │
 │                                                                  │
 │  User: "Review my UI at localhost:3000 and fix everything"       │
 │           │                                                      │
 │           ▼                                                      │
 │  ┌──────────────────────────────────────────────────────────┐    │
-│  │                    ui-audit MCP                           │    │
+│  │              ui-audit MCP (data collection)              │    │
 │  │                                                          │    │
-│  │  Step 1: Collect Data                                    │    │
 │  │  📸 Screenshot ───► Puppeteer ───► PNG Image             │    │
 │  │  ♿ Accessibility ► axe-core ────► WCAG Violations       │    │
 │  │  ⚡ Performance ──► Perf API ───► Web Vitals            │    │
 │  │  🔍 Code Scan ────► File Analysis ► Anti-patterns       │    │
-│  │           │                                              │    │
-│  │           ▼                                              │    │
-│  │  Step 2: Expert Review (Claude API call)                 │    │
-│  │  🧠 Send screenshot + all data ──► Claude API           │    │
-│  │     "Act as a world-class          (separate instance)   │    │
-│  │      frontend expert..."            │                    │    │
-│  │                                     ▼                    │    │
-│  │                              Expert Report               │    │
-│  │                              with exact fixes            │    │
+│  │  📋 Expert Prompt ► Baked-in review methodology          │    │
 │  └──────────────────────┬───────────────────────────────────┘    │
 │                         │                                        │
 │                         ▼                                        │
-│  Step 3: Claude Code receives the expert report                  │
-│  Step 4: Claude Code implements every fix automatically          │
+│  Claude Code receives: screenshot + data + expert methodology    │
+│                         │                                        │
+│                         ▼                                        │
+│  🧠 Claude acts as world-class frontend expert (FREE — Pro plan) │
+│     Generates comprehensive review with exact fixes              │
+│                         │                                        │
+│                         ▼                                        │
+│  🔧 Claude implements every fix in the codebase automatically   │
 │                                                                  │
 └──────────────────────────────────────────────────────────────────┘
 ```
