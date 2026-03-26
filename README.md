@@ -8,7 +8,6 @@
   <img src="https://img.shields.io/npm/l/uimax-mcp" alt="license" />
   <img src="https://img.shields.io/badge/tools-35-blue" alt="35 tools" />
   <img src="https://img.shields.io/badge/tests-463%20passing-brightgreen" alt="463 tests passing" />
-  <img src="https://img.shields.io/badge/coverage-87%25-brightgreen" alt="87% coverage" />
   <img src="https://img.shields.io/badge/cost-free%20(Pro%20plan)-brightgreen" alt="free for Pro plan" />
 </p>
 
@@ -18,9 +17,12 @@ One command — *"review my UI at localhost:3000"* — and it:
 2. **Audits accessibility** — runs axe-core for WCAG 2.1 violations
 3. **Runs Lighthouse** — real Google Lighthouse scores (Performance, Accessibility, Best Practices, SEO)
 4. **Measures performance** — captures Core Web Vitals (FCP, LCP, CLS, TBT)
-5. **Scans your code** — checks for 25+ anti-patterns across accessibility, design, and code quality
+5. **Scans your code** — AST-based analysis for 25+ anti-patterns across accessibility, design, and code quality
 6. **Generates an expert review** — Claude acts as a senior frontend engineer with a baked-in review methodology
 7. **Implements the fixes** — edits your actual code files, starting from critical issues down
+8. **Tracks everything** — auto-saves review history so you can see progress over time
+
+**Works on any URL** — localhost, staging, production. Any site your machine can reach.
 
 **Free for all Claude Code users (Pro plan and above). No API keys. No extra costs. Just install and go.**
 
@@ -29,18 +31,6 @@ claude mcp add uimax -- npx -y uimax-mcp
 ```
 
 ---
-
-## The Problem
-
-You're building a frontend. You want expert-level feedback on your UI — visual design, accessibility, performance, code quality. Normally you'd need to:
-
-1. Take screenshots manually
-2. Run Lighthouse / axe separately
-3. Review your own code with fresh eyes
-4. Compile all findings into a coherent review
-5. Then figure out the fixes
-
-**That's 5 steps too many.**
 
 ## Quick Start
 
@@ -61,10 +51,11 @@ Claude Code calls review_ui ->
   2. Runs axe-core accessibility audit
   3. Runs Google Lighthouse (Performance, A11y, Best Practices, SEO)
   4. Measures Core Web Vitals
-  5. Scans source code for 25+ anti-patterns
+  5. Scans source code with AST-based analysis
   6. Returns screenshot + all data + expert review methodology
   7. Claude Code generates expert review (using YOUR Pro plan -- $0 extra)
   8. Claude Code implements every fix automatically
+  9. Review saved to .uimax-reviews.json for tracking
 ```
 
 ### Install Globally
@@ -75,116 +66,95 @@ npm install -g uimax-mcp
 
 ---
 
-## Tools
+## Tools (35)
 
-The MCP server exposes **35 tools** that Claude uses automatically:
+### Review Pipeline
 
-### `review_ui` -- Full Automated Pipeline
+| Tool | Description |
+|------|-------------|
+| `review_ui` | **The main tool.** Full automated pipeline: screenshot + Lighthouse + axe-core + performance + code analysis + expert review methodology. Auto-saves to review history. |
+| `quick_review` | Fast design-only review. Screenshot + focused design methodology. No code analysis or performance audit. |
+| `export_report` | Generate a standalone HTML report with everything embedded. Dark themed, zero dependencies. Share with your team. |
 
-This is the main tool. One call does **everything**:
-1. Captures screenshot of your running app
-2. Runs accessibility audit (axe-core WCAG 2.1)
-3. Runs Google Lighthouse (scores + key audits)
-4. Measures Core Web Vitals via Performance API
-5. Scans your source code for anti-patterns
-6. Returns ALL data + expert frontend review methodology to Claude Code
-7. Claude Code generates the expert review and implements fixes
+### Screenshots & Visual
 
-```
-Input:  URL + code directory
-Output: Screenshot + Lighthouse scores + audit data + expert methodology
-        -> Claude Code generates review + implements every fix
-```
+| Tool | Description |
+|------|-------------|
+| `screenshot` | Capture a high-resolution PNG screenshot of any URL. |
+| `responsive_screenshots` | Screenshots at mobile (375px), tablet (768px), and desktop (1440px) viewports. |
+| `check_dark_mode` | Compare light mode vs dark mode (emulated). Returns both screenshots + difference percentage. |
+| `compare_screenshots` | Pixel-level diff using `pixelmatch`. Returns both screenshots + red-highlighted diff image + exact pixel difference %. |
+| `semantic_compare` | **AI-powered visual comparison.** Captures before/after + pixel diff, returns structured methodology for Claude to evaluate whether changes match the intended design request. |
 
-> **100% free for Pro plan users.** The MCP handles data collection. Claude Code (your existing subscription) handles the expert review and implementation. No API keys. No extra charges.
+### Lighthouse & Performance
 
-### `quick_review`
-Fast design-only review. Captures a screenshot and returns it with a focused design methodology. No code analysis, no performance audit. Good for rapid iteration.
+| Tool | Description |
+|------|-------------|
+| `lighthouse_audit` | Full Google Lighthouse audit — Performance, Accessibility, Best Practices, SEO scores + failing audits. |
+| `pwa_audit` | PWA readiness: installable, service worker, HTTPS, manifest, offline capability. |
+| `security_audit` | Security analysis: HTTPS, CSP, mixed content, vulnerable JS libraries, external links without `noopener`. |
+| `unused_code` | Find unused JavaScript and CSS with exact byte savings per resource. |
+| `lcp_optimization` | Deep LCP analysis: what the element is, resource load time, render delay, TTFB, optimization suggestions. |
+| `resource_analysis` | Full resource breakdown by type, transfer sizes, request count, top 10 largest, render-blocking resources. |
+| `performance_audit` | Core Web Vitals via Performance API: FCP, LCP, CLS, TBT, DOM node count, JS heap size. |
+| `accessibility_audit` | axe-core WCAG 2.1 Level A & AA audit. Violations grouped by severity with fix instructions. |
 
-### `lighthouse_audit`
-Runs a full **Google Lighthouse** audit and returns real scores for:
-- **Performance** (0-100)
-- **Accessibility** (0-100)
-- **Best Practices** (0-100)
-- **SEO** (0-100)
+### Code Analysis
 
-Plus detailed findings for failing audits with fix instructions. This is the real Lighthouse — the same tool Chrome DevTools uses.
+| Tool | Description |
+|------|-------------|
+| `analyze_code` | AST-based analysis (TypeScript compiler API) for 25+ rules. Zero false positives on string literals. Falls back to regex for non-JS files. Configurable via `.uimaxrc.json`. |
 
-### `compare_screenshots`
-**Before/after visual comparison with pixel-level diffing.** Give it two URLs — captures both, runs `pixelmatch` to compute exact pixel differences, and generates a red-highlighted diff image showing what changed. Perfect for:
-- Verifying UI fixes actually changed what you expected
-- Comparing staging vs production
-- Visual regression checking
+### Browser Interaction
 
-```
-Input:  URL A ("before") + URL B ("after")
-Output: Both screenshots + diff image + pixel difference % + pixels changed + dimensions
-```
+| Tool | Description |
+|------|-------------|
+| `navigate` | Navigate to a URL, wait for network idle. Returns page info + screenshot. |
+| `click` | Click an element by CSS selector. Returns screenshot after click. |
+| `type_text` | Type into input fields. Options: `clearFirst`, `pressEnter`. Returns screenshot after. |
+| `select_option` | Select a dropdown option by value. Returns screenshot after. |
+| `scroll` | Scroll by pixel amount or to a specific element. Returns screenshot after. |
+| `wait_for` | Wait for an element to appear in the DOM. Returns tag name and text content. |
+| `get_element` | Get element details: attributes, bounding box, computed styles, visibility. |
 
-### `export_report`
-Generates a **standalone HTML report** with everything embedded — screenshot, accessibility violations, Lighthouse scores, performance metrics, code findings. Dark themed, zero external dependencies. Share it with your team, attach it to a PR, or email it to a client.
+### Debugging
 
-```
-Input:  URL + code directory + output path (optional)
-Output: Self-contained HTML file at the specified path
-```
+| Tool | Description |
+|------|-------------|
+| `capture_console` | Capture all console messages (log, warn, error, info, debug) + uncaught exceptions during page load. |
+| `capture_network` | Capture all network requests with status, size, timing, resource type. Summary grouped by type. |
+| `capture_errors` | Capture JS exceptions, unhandled rejections, and failed resource loads. |
 
-### `screenshot`
-Captures a high-resolution PNG screenshot of any URL. Claude can see the image directly and analyze visual design, layout, spacing, typography, and color usage.
+### Multi-Page
 
-### `responsive_screenshots`
-Captures screenshots at **mobile (375px)**, **tablet (768px)**, and **desktop (1440px)** viewports. Perfect for reviewing responsive design.
+| Tool | Description |
+|------|-------------|
+| `crawl_and_review` | Discover internal links from a URL and audit up to 10 pages — screenshot + axe-core + performance each. |
 
-### `check_dark_mode`
-Detects whether your app supports dark mode. Captures two screenshots — light mode and dark mode (emulated via `prefers-color-scheme: dark`) — and compares them. Returns both screenshots + a difference percentage.
+### Baselines & Budgets
 
-### `accessibility_audit`
-Injects [axe-core](https://github.com/dequelabs/axe-core) into the page and runs a WCAG 2.1 Level A & AA audit. Returns violations grouped by severity with fix instructions.
+| Tool | Description |
+|------|-------------|
+| `save_baseline` | Save current audit state to `.uimax-history.json`. Track scores over time. |
+| `compare_to_baseline` | Compare current state vs previous baseline. Shows improvements and regressions. |
+| `check_budgets` | Enforce performance budgets from `.uimaxrc.json`. Pass/fail for Lighthouse scores, Web Vitals, violation counts. |
 
-### `performance_audit`
-Measures Core Web Vitals using the browser's Performance API:
-- First Contentful Paint (FCP)
-- Largest Contentful Paint (LCP)
-- Cumulative Layout Shift (CLS)
-- Total Blocking Time (TBT)
-- DOM node count, resource count, JS heap size
+### Review History
 
-### `crawl_and_review`
-**Multi-page audit from a single URL.** Give it one URL and it discovers all internal links, then audits up to 10 pages — each getting a screenshot, axe-core accessibility audit, and Core Web Vitals measurement. Perfect for reviewing an entire site without running page-by-page.
+| Tool | Description |
+|------|-------------|
+| `get_review_history` | View past UIMax reviews for this project. Filter by URL, limit count. |
+| `get_review_stats` | Aggregate statistics: total reviews, score trends, most common issues, most problematic files. |
+| `review_diff` | Compare two specific reviews — new issues, resolved issues, score changes with improved/regressed indicators. |
 
-```
-Input:  Starting URL + maxPages (optional, default 5) + code directory (optional)
-Output: Per-page screenshots + accessibility issues + performance metrics + overall summary
-```
+> **Every review is auto-saved.** When you run `review_ui`, the results are automatically persisted to `.uimax-reviews.json`. No manual save needed — just ask "show me my review history" anytime.
 
-### `save_baseline`
-Save the current audit state for a URL as a baseline snapshot. Runs accessibility, performance, and Lighthouse audits, then appends the results to `.uimax-history.json` in your project directory. Use this before making changes so you can compare later.
+---
 
-```
-Input:  URL + optional code directory
-Output: Baseline entry saved to .uimax-history.json
-```
+## AST-Powered Code Analysis
 
-### `compare_to_baseline`
-Compare the current audit state of a URL against its most recent saved baseline. Runs fresh audits, loads the previous baseline, and shows what improved and what regressed. Automatically saves the new results as the latest baseline.
+The `analyze_code` tool uses the **TypeScript compiler API** for `.ts/.tsx/.js/.jsx` files — catching bugs that regex misses with zero false positives.
 
-```
-Input:  URL + optional code directory
-Output: Improvements, regressions, and unchanged metrics
-```
-
-### `check_budgets`
-Check if the current site meets performance budgets defined in `.uimaxrc.json`. Runs fresh audits and compares against budget thresholds for Lighthouse scores, Web Vitals, accessibility violations, and code issues. Returns pass/fail with details of any exceeded budgets.
-
-```
-Input:  URL + optional code directory (for .uimaxrc.json)
-Output: Pass/fail status + details of any budget violations
-```
-
-### `analyze_code`
-Scans frontend source files for **25+ categories** of issues. Uses **AST-based analysis** (TypeScript compiler API) for `.ts/.tsx/.js/.jsx` files — catches bugs that regex misses, with zero false positives on string literals. Falls back to regex for other file types and rules without AST implementations. Supports custom configuration via `.uimaxrc.json` (see [Configuration](#configuration)).
-
-**AST-powered rules** (zero false positives):
 | Rule | What AST catches that regex misses |
 |------|-----------------------------------|
 | `react-hooks-conditional` | Hooks inside nested if/for/while/ternary — proper scope traversal |
@@ -195,78 +165,13 @@ Scans frontend source files for **25+ categories** of issues. Uses **AST-based a
 | `console-log` | `console.log/warn/error` — not fooled by variable names containing "console" |
 | `inline-style` | JSX `style={}` attributes — proper attribute detection |
 
-### Deep Lighthouse Tools
-
-Five dedicated tools for granular performance analysis — goes deeper than a single Lighthouse score.
-
-### `pwa_audit`
-Check Progressive Web App readiness: installable, service worker, HTTPS, manifest, offline capability.
-
-### `security_audit`
-Security analysis: HTTPS usage, Content Security Policy, mixed content, vulnerable JavaScript libraries, external links without `noopener`.
-
-### `unused_code`
-Find unused JavaScript and CSS with exact byte savings per resource. Know exactly what to tree-shake.
-
-### `lcp_optimization`
-Deep analysis of your Largest Contentful Paint: what the LCP element is, resource load time, render delay, TTFB, with specific optimization suggestions.
-
-### `resource_analysis`
-Full resource breakdown by type (JS, CSS, images, fonts), total transfer size, request count, top 10 largest resources, and render-blocking resources.
-
-### Browser Interaction Tools
-
-Seven tools for interacting with your running app — click buttons, fill forms, navigate, and verify the results visually.
-
-### `navigate`
-Navigate to a URL, wait for network idle. Returns page info + screenshot.
-
-### `click`
-Click an element by CSS selector. Returns a screenshot after the click so Claude can verify the result.
-
-### `type_text`
-Type text into an input field. Options: `clearFirst` to clear existing value, `pressEnter` to submit. Returns screenshot after.
-
-### `select_option`
-Select a dropdown option by value. Returns screenshot after.
-
-### `scroll`
-Scroll the page by pixel amount (up/down) or to a specific element via CSS selector. Returns screenshot after.
-
-### `wait_for`
-Wait for an element to appear in the DOM. Returns element tag name and text content.
-
-### `get_element`
-Get detailed info about a DOM element: attributes, bounding box, computed styles (color, font, background), visibility.
-
-### Debugging Tools
-
-Three tools for capturing what's happening under the hood during page load.
-
-### `capture_console`
-Capture all console messages (log, warn, error, info, debug) and uncaught exceptions during page load. Returns entries with timestamps and source locations.
-
-### `capture_network`
-Capture all network requests with status codes, sizes, timing, and resource types. Returns per-request details + summary grouped by type (JS, CSS, images, etc.).
-
-### `capture_errors`
-Capture JavaScript exceptions, unhandled promise rejections, and failed resource loads (broken images, missing scripts/stylesheets).
-
-### AI-Powered Review
-
-### `semantic_compare`
-**AI-powered visual comparison.** Captures before/after screenshots, runs pixel-level diff, and returns a structured methodology prompt for Claude to semantically evaluate whether UI changes match the intended design request. Goes beyond pixel diffing to understand *intent*.
-
-```
-Input:  URL before + URL after + description of intended change
-Output: Both screenshots + diff image + pixel diff % + semantic methodology for Claude
-```
+Falls back to regex for file types that can't be AST-parsed and for rules without AST implementations (hardcoded colors, z-index, font sizes, etc.).
 
 ---
 
 ## Configuration
 
-Create a `.uimaxrc.json` in your project root to customize code analysis:
+Create a `.uimaxrc.json` in your project root to customize code analysis and performance budgets:
 
 ```json
 {
@@ -284,21 +189,7 @@ Create a `.uimaxrc.json` in your project root to customize code analysis:
     "dist",
     "*.test.*",
     "*.spec.*"
-  ]
-}
-```
-
-- **`rules`** — Set any rule to `"off"`, `"warn"`, or `"error"`
-- **`severity`** — Override severity: `"low"`, `"medium"`, `"high"`, `"critical"`
-- **`ignore`** — Additional glob patterns to exclude from analysis
-- **`budgets`** — Performance budgets for the `check_budgets` tool (see below)
-
-### Performance Budgets
-
-Add a `budgets` key to `.uimaxrc.json` to define thresholds:
-
-```json
-{
+  ],
   "budgets": {
     "lighthouse": {
       "performance": 90,
@@ -318,7 +209,10 @@ Add a `budgets` key to `.uimaxrc.json` to define thresholds:
 }
 ```
 
-Run `check_budgets` to verify your site meets these thresholds.
+- **`rules`** — Set any rule to `"off"`, `"warn"`, or `"error"`
+- **`severity`** — Override severity: `"low"`, `"medium"`, `"high"`, `"critical"`
+- **`ignore`** — Additional glob patterns to exclude from analysis
+- **`budgets`** — Performance thresholds enforced by the `check_budgets` tool
 
 UIMax searches for `.uimaxrc.json` in the target directory and up to 3 parent directories, so it works in monorepos.
 
@@ -333,6 +227,7 @@ Expert review prompts that guide Claude's analysis:
 | `ui-review` | Comprehensive review (design + UX + a11y + perf + code) |
 | `responsive-review` | Responsive design review across viewports |
 | `quick-design-review` | Fast visual/UX feedback from a screenshot only |
+| `semantic-compare` | AI-powered before/after visual comparison |
 
 ---
 
@@ -341,12 +236,79 @@ Expert review prompts that guide Claude's analysis:
 ### Full Review (the main workflow)
 ```
 You: Review the UI at http://localhost:3000
-     Source code is in /Users/me/project/src
+     Source code is in ./src
 
 Claude: [Calls review_ui]
         [Captures screenshot, runs Lighthouse + axe + perf + code scan]
         [Generates 20+ findings with specific fixes]
         [Implements every fix automatically]
+        [Auto-saves review to .uimax-reviews.json]
+```
+
+### Review Any Public Website
+```
+You: Review the UI at https://stripe.com
+
+Claude: [Calls review_ui]
+        [Full audit of the live production site]
+        [Returns findings + recommendations]
+```
+
+### Track Progress Over Time
+```
+You: Show me my review history
+
+Claude: [Calls get_review_history]
+        [Shows table of past reviews: dates, scores, issue counts]
+
+You: Compare my last two reviews
+
+Claude: [Calls review_diff]
+        [Shows what improved ✅, what regressed ❌, new issues, resolved issues]
+
+You: What are my most common issues?
+
+Claude: [Calls get_review_stats]
+        [Shows trends, most common issues, most problematic files]
+```
+
+### Interact with Your App
+```
+You: Navigate to localhost:3000, click the login button,
+     type "test@email.com" in the email field
+
+Claude: [Calls navigate → click → type_text]
+        [Returns a screenshot after each action]
+        [Verifies each step visually]
+```
+
+### Deep Performance Analysis
+```
+You: Find unused code on https://myapp.com
+
+Claude: [Calls unused_code]
+        [Lists every unused JS/CSS file with byte savings]
+        [Suggests what to tree-shake]
+
+You: Why is my LCP slow?
+
+Claude: [Calls lcp_optimization]
+        [Identifies the LCP element, breakdown of load time]
+        [Specific optimization suggestions]
+```
+
+### Debug Page Load Issues
+```
+You: What console errors does localhost:3000 produce?
+
+Claude: [Calls capture_console]
+        [Returns all console messages + uncaught exceptions]
+
+You: Show me all network requests on page load
+
+Claude: [Calls capture_network]
+        [Returns every request: URL, status, size, timing]
+        [Summary grouped by resource type]
 ```
 
 ### Before/After Comparison
@@ -354,9 +316,27 @@ Claude: [Calls review_ui]
 You: Compare localhost:3000 with localhost:3001
 
 Claude: [Calls compare_screenshots]
-        [Shows both screenshots side by side]
-        [Reports 23% visual difference]
-        [Identifies what changed]
+        [Pixel-level diff with red-highlighted changes]
+        [Reports exact pixel difference %]
+```
+
+### Semantic Visual Review
+```
+You: I changed the header to be sticky. Compare before and after.
+
+Claude: [Calls semantic_compare with change description]
+        [Captures both states + pixel diff]
+        [Evaluates whether changes match the intent]
+        [Checks for visual regressions]
+```
+
+### Enforce Performance Budgets
+```
+You: Check if my site meets our performance budgets
+
+Claude: [Calls check_budgets]
+        [Reads thresholds from .uimaxrc.json]
+        [Returns ✅ pass or ❌ fail for each metric]
 ```
 
 ### Generate Shareable Report
@@ -364,43 +344,17 @@ Claude: [Calls compare_screenshots]
 You: Export a full report of localhost:3000 to ./report.html
 
 Claude: [Calls export_report]
-        [Runs all audits, generates standalone HTML]
-        [Saves to ./report.html — open in any browser]
+        [Generates standalone dark-themed HTML report]
+        [Open in any browser, share with team]
 ```
 
-### Lighthouse Scores
+### Multi-Page Audit
 ```
-You: Run Lighthouse on http://localhost:3000
+You: Crawl localhost:3000 and audit all pages
 
-Claude: [Calls lighthouse_audit]
-        [Returns Performance: 92, Accessibility: 87, Best Practices: 100, SEO: 90]
-        [Lists failing audits with fix instructions]
-```
-
-### Responsive Check
-```
-You: Check if my site is responsive - http://localhost:3000
-
-Claude: [Calls responsive_screenshots]
-        [Shows mobile, tablet, desktop views]
-        [Identifies layout issues at each breakpoint]
-```
-
-### Quick Design Feedback
-```
-You: Take a screenshot of localhost:3000 and tell me
-     what a senior designer would change
-
-Claude: [Calls quick_review]
-        [Provides focused design feedback + implements fixes]
-```
-
-### Accessibility Only
-```
-You: Run an accessibility audit on http://localhost:3000
-
-Claude: [Calls accessibility_audit]
-        [Reports WCAG violations with fix instructions]
+Claude: [Calls crawl_and_review]
+        [Discovers internal links, audits up to 10 pages]
+        [Per-page: screenshot + accessibility + performance]
 ```
 
 ---
@@ -416,6 +370,7 @@ When using the full `review_ui` pipeline, Claude evaluates:
 | **Accessibility** | WCAG 2.1 AA, keyboard nav, screen reader compat, focus management |
 | **Performance** | Lighthouse scores, Core Web Vitals, render-blocking resources, bundle size |
 | **Code Quality** | Component architecture, CSS organization, error boundaries, TypeScript safety |
+| **Security** | HTTPS, CSP, vulnerable libraries, mixed content |
 | **Creative** | Modern UI patterns (Linear, Vercel, Raycast), micro-interactions, animations |
 
 ---
@@ -480,34 +435,38 @@ Auto-detected from `package.json`:
 ## How It Works
 
 ```
-+------------------------------------------------------------------+
-|                  Claude Code (your Pro plan)                       |
-|                                                                   |
-|  User: "Review my UI at localhost:3000 and fix everything"        |
-|           |                                                       |
-|           v                                                       |
-|  +------------------------------------------------------------+  |
-|  |              UIMax MCP (data collection)                    |  |
-|  |                                                             |  |
-|  |  Screenshot -----> Puppeteer -------> PNG Image             |  |
-|  |  Accessibility --> axe-core --------> WCAG Violations       |  |
-|  |  Lighthouse -----> Google LH -------> Scores + Audits      |  |
-|  |  Performance ----> Perf API --------> Web Vitals            |  |
-|  |  Code Scan ------> File Analysis ---> Anti-patterns         |  |
-|  |  Expert Prompt --> Baked-in methodology                     |  |
-|  +-------------------------+----------------------------------+   |
-|                            |                                      |
-|                            v                                      |
-|  Claude Code receives: screenshot + data + expert methodology     |
-|                            |                                      |
-|                            v                                      |
-|  Claude acts as world-class frontend expert (FREE -- Pro plan)    |
-|     Generates comprehensive review with exact fixes               |
-|                            |                                      |
-|                            v                                      |
-|  Claude implements every fix in the codebase automatically        |
-|                                                                   |
-+------------------------------------------------------------------+
++----------------------------------------------------------------------+
+|                    Claude Code (your Pro plan)                         |
+|                                                                       |
+|  User: "Review my UI at localhost:3000 and fix everything"            |
+|           |                                                           |
+|           v                                                           |
+|  +----------------------------------------------------------------+  |
+|  |                UIMax MCP (35 tools)                             |  |
+|  |                                                                 |  |
+|  |  Screenshot -------> Puppeteer ----------> PNG Image            |  |
+|  |  Accessibility ----> axe-core ------------> WCAG Violations     |  |
+|  |  Lighthouse -------> Google LH ----------> Scores + Audits     |  |
+|  |  Deep LH ----------> PWA/Security/LCP --> Granular Analysis    |  |
+|  |  Performance ------> Perf API ----------> Web Vitals           |  |
+|  |  Code Scan --------> TypeScript AST -----> Anti-patterns       |  |
+|  |  Browser ----------> Click/Type/Scroll --> Interaction          |  |
+|  |  Debugging --------> Console/Network ----> Runtime Data        |  |
+|  |  History ----------> .uimax-reviews.json > Progress Tracking   |  |
+|  |  Expert Prompt ----> Baked-in methodology                      |  |
+|  +----------------------------+-----------------------------------+  |
+|                               |                                      |
+|                               v                                      |
+|  Claude Code receives: screenshot + data + expert methodology        |
+|                               |                                      |
+|                               v                                      |
+|  Claude acts as world-class frontend expert (FREE -- Pro plan)       |
+|     Generates comprehensive review with exact fixes                  |
+|                               |                                      |
+|                               v                                      |
+|  Claude implements every fix in the codebase automatically           |
+|                                                                       |
++----------------------------------------------------------------------+
 ```
 
 ---
@@ -546,8 +505,14 @@ Contributions welcome! Some ideas:
 - [ ] Framework-specific checks (Vue composition API, Svelte stores)
 - [x] Visual regression with pixel-level diffing
 - [x] Performance budgets (fail if scores drop below thresholds)
+- [x] Browser interaction (click, type, scroll, navigate)
+- [x] Console and network capture
+- [x] Deep Lighthouse analysis (PWA, security, unused code, LCP, resources)
+- [x] AI-powered semantic visual comparison
+- [x] Review history tracking with auto-save
 - [ ] Custom rule plugins (user-defined regex rules)
 - [ ] Figma design comparison (screenshot vs Figma mock)
+- [ ] Cross-browser testing (Firefox, WebKit via Playwright)
 
 ---
 
