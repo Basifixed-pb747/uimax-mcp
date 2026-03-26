@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.prembobby39-gif/uimax-mcp",
-  "description": "Turns Claude Code into a frontend expert. Captures screenshots, runs Lighthouse + axe-core + code analysis, generates expert review, and implements fixes automatically. 12 tools. Free for Pro plan users.",
+  "description": "Frontend expert for Claude Code. Screenshots, Lighthouse, axe-core, code analysis, auto-fix.",
   "repository": {
     "url": "https://github.com/prembobby39-gif/uimax-mcp",
     "source": "github"
