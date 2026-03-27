@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/npm/v/uimax-mcp" alt="npm version" />
   <img src="https://img.shields.io/npm/dm/uimax-mcp" alt="npm downloads" />
   <img src="https://img.shields.io/npm/l/uimax-mcp" alt="license" />
-  <img src="https://img.shields.io/badge/tools-35-blue" alt="35 tools" />
+  <img src="https://img.shields.io/badge/tools-34-blue" alt="34 tools" />
   <img src="https://img.shields.io/badge/tests-463%20passing-brightgreen" alt="463 tests passing" />
   <img src="https://img.shields.io/badge/cost-free%20(Pro%20plan)-brightgreen" alt="free for Pro plan" />
 </p>
@@ -442,7 +442,7 @@ Auto-detected from `package.json`:
 |           |                                                           |
 |           v                                                           |
 |  +----------------------------------------------------------------+  |
-|  |                UIMax MCP (35 tools)                             |  |
+|  |                UIMax MCP (34 tools)                             |  |
 |  |                                                                 |  |
 |  |  Screenshot -------> Puppeteer ----------> PNG Image            |  |
 |  |  Accessibility ----> axe-core ------------> WCAG Violations     |  |
